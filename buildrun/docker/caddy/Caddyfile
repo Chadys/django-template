@@ -1,0 +1,21 @@
+{
+    debug
+	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+local-#domain_name.domain.ovh {
+   tls internal
+   @public {
+       path  /media/*
+   }
+   route @public {
+         header Access-Control-Allow-Origin *
+         header Access-Control-Allow-Headers *
+         header Access-Control-Allow-Methods *
+         root * /public/
+         file_server {
+             precompressed br gzip
+         }
+   }
+   reverse_proxy web:8000
+}

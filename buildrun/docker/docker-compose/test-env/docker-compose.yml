@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: timescale/timescaledb:2.3.0-pg12
+    environment:
+      - POSTGRES_DB=test_db
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_pwd
+    # https://docs.djangoproject.com/en/3.0/ref/databases/#optimizing-postgresql-s-configuration
+    command: postgres -c client_encoding="UTF8" -c default_transaction_isolation="read committed" -c timezone="UTC"
+
+  test:
+    build:
+      context: ../../../..
+      dockerfile: buildrun/docker/#project_name/Dockerfile
+      target: test-image
+    image: #projet_gitlab_image:local-test
+    volumes:
+      - ../../../../src:/code
+    depends_on:
+      - db

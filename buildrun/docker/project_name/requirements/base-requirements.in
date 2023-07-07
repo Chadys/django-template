@@ -1,0 +1,12 @@
+django[argon2]>=3.2.10
+psycopg2-binary
+environs[django]
+django-ninja
+django-ninja-jwt
+orjson
+django-filter
+django-cors-headers
+django-csp
+django-auth-ldap
+sentry_sdk
+pillow

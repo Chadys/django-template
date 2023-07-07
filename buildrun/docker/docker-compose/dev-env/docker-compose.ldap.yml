@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  ldap:
+    image: osixia/openldap:1.5.0
+    environment:
+      LDAP_ORGANISATION: domain.ovh
+      LDAP_DOMAIN: domain.ovh
+      LDAP_ADMIN_PASSWORD: ldap_admin_pwd
+      LDAP_READONLY_USER: "true"
+      LDAP_READONLY_USER_PASSWORD: ldap_pwd
+    command: --loglevel debug --copy-service
+    volumes:
+      - ../../ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
+      - ldap-db:/var/lib/ldap
+      - ldap-config:/etc/ldap/slapd.d
+    networks:
+      - auth
+#    ports:
+#      - 389:389
+#      - 636:636
+
+  ldap-admin:
+    image: osixia/phpldapadmin:0.9.0
+    command: --loglevel debug
+    profiles:
+      - admin
+    environment:
+      PHPLDAPADMIN_HTTPS: "false"
+      PHPLDAPADMIN_LDAP_HOSTS: ldap
+    ports:
+      - 9090:80
+    depends_on:
+      - ldap
+    networks:
+      - auth
+
+networks:
+  auth:
+    external: true
+    name: #project_name-dev_auth
+
+volumes:
+    ldap-db:
+    ldap-config:

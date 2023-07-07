@@ -1,0 +1,53 @@
+version: '3'
+tasks:
+  create_network:
+    - docker network create #project_name-dev_web || echo 0
+    - docker network create #project_name-dev_db || echo 0
+    - docker network create #project_name-dev_auth || echo 0
+  push:
+    - docker-compose push web
+  pull:
+    - docker-compose pull web
+  restart-caddy:
+    - docker-compose restart caddy
+  run-ldap:
+    - docker-compose -f docker-compose.ldap.yml up -d
+  stop-all:
+    - docker-compose -f docker-compose.ldap.yml stop
+    - docker-compose -f docker-compose.yml stop
+  compile-dep:
+    cmds:
+      - docker-compose up compile-dep
+  migrate:
+    cmds:
+      - docker-compose exec web ./manage.py migrate
+  collectstatic:
+    cmds:
+      - docker-compose exec web ./manage.py collectstatic --noinput
+
+  create-super-user:
+    desc: create super user
+    cmds:
+      - docker-compose exec --env DJANGO_SUPERUSER_PASSWORD={{.DJANGO_SUPERUSER_PASSWORD}}
+        web ./manage.py createsuperuser --noinput --email admin@domain.ovh --username admin
+
+  reset:
+    cmds:
+      - docker-compose -f docker-compose.yml -f docker-compose.ldap.yml down -v
+    ignore_error: true
+
+  up:
+    cmds:
+      - docker-compose -f docker-compose.yml -f docker-compose.ldap.yml up -d
+  init-app:
+    desc: init or reset all the stack
+    cmds:
+      - task: reset
+      - cmd: docker-compose -f docker-compose.yml -f docker-compose.ldap.yml pull
+        ignore_error: true
+      - task: create_network
+      - task: up
+      - cmd: sleep 5
+      - task: migrate
+      - task: collectstatic
+      - task: create-super-user

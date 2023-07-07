@@ -1,0 +1,50 @@
+repos:
+  - hooks:
+      - id: trailing-whitespace
+        args: [ '--markdown-linebreak-ext=md' ]
+        exclude: ^.idea/
+      - id: check-json
+      - id: end-of-file-fixer
+        exclude: ^.idea/
+      - id: check-added-large-files
+        args: [ '--maxkb=10000' ]
+    repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+  - hooks:
+      - files: requirements.txt
+        id: python-safety-dependencies-check
+        args: [ '--disable-telemetry' ]
+    repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.1
+  - hooks:
+      - id: black
+    repo: https://github.com/psf/black
+    rev: 23.3.0
+  - hooks:
+      - id: hadolint-docker
+    repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+  - hooks:
+      - id: commitizen
+        stages:
+          - commit-msg
+    repo: https://github.com/commitizen-tools/commitizen
+    rev: 3.5.2
+  - hooks:
+      - id: isort
+        args: [ "--profile", "black", "--filter-files", "--extend-skip", "__init__.py"]
+    repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+  - hooks:
+      - id: djhtml
+      - id: djcss
+      - id: djjs
+    repo: https://github.com/rtts/djhtml
+    rev: 3.0.6
+  - hooks:
+      - id: no-auto-migrations
+        name: no auto-named migrations
+        entry: please provide a descriptive name for migrations
+        language: fail
+        files: .*/migrations/.*_auto_.*\.py$
+    repo: local

@@ -1,0 +1,81 @@
+version: '3.9'
+
+services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+#      - "8383:8383"
+    volumes:
+      - ../../caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ../../caddy/.caddy/config/:/config/
+      - ../../caddy/.caddy/data/:/data/
+      - ../../../../src/public:/public
+    networks:
+      - web
+
+
+  db:
+    image: timescale/timescaledb:2.3.0-pg12
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=#project_name
+      - POSTGRES_USER=#project_name_user
+      - POSTGRES_PASSWORD=#project_name_pwd
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    # https://docs.djangoproject.com/en/3.0/ref/databases/#optimizing-postgresql-s-configuration
+    command: postgres -c client_encoding="UTF8" -c default_transaction_isolation="read committed" -c timezone="UTC"
+    networks:
+      - db
+
+
+  web:
+    build:
+      context: ../../../..
+      dockerfile: buildrun/docker/#project_name/Dockerfile
+      target: dev-image
+    image: #projet_gitlab_image:develop
+    command: python manage.py runserver 0.0.0.0:8000 --settings=configurations.dev-settings
+    volumes:
+      - ../../../../src:/code
+    env_file:
+      - ../../#project_name/dev.env
+      - ../../#project_name/secrets.env
+    tty: true
+    depends_on:
+      - caddy
+      - db
+    networks:
+      - db
+      - web
+      - auth
+
+  compile-dep:
+    build:
+      context: ../../../..
+      dockerfile: buildrun/docker/#project_name/Dockerfile
+      target: base-image
+    image: #projet_gitlab_image:compile
+    restart: on-failure
+    profiles:
+      - compile
+    command: >
+      sh -c
+      "pip-compile --upgrade --output-file requirements/base-requirements.txt requirements/base-requirements.in &&
+      pip-compile --upgrade --output-file requirements/test-requirements.txt requirements/test-requirements.in &&
+      pip-compile --upgrade --output-file requirements/dev-requirements.txt requirements/dev-requirements.in &&
+      pip-compile --upgrade --output-file requirements/prod-requirements.txt requirements/prod-requirements.in"
+    volumes:
+      - ../../#project_name/requirements/:/code/requirements/
+
+volumes:
+  postgres:
+  code:
+
+networks:
+  db:
+  web:
+  auth:
