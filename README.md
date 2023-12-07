@@ -53,7 +53,7 @@ Also setup the IDE's project interpreter to a docker-compose configuration, usin
 service `web` and name it `#project_name-web DEV`
 
 
-## Launch dependant services
+## Launch dependent services
 ```shell
 task run-ldap
 ```
